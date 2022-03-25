@@ -3,7 +3,6 @@ const express = require("express");
 const multer = require("multer");
 const fs = require('fs');
 const Jimp = require('jimp');
-const {Image} = require('canvas');
 
 const tf = require('@tensorflow/tfjs-node');
 
@@ -50,19 +49,24 @@ async function generatePredictions(imagePath) {
 
     const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
 
-    const tensor = tf.tidy(() => {
-      const decode = tf.node.decodeImage(buffer, 3);
-      const expand = tf.expandDims(decode, 0);
-      return expand;
+    var tensor = tf.tidy(() => {
+      return tf.node.decodeImage(buffer, 3).resizeNearestNeighbor([224, 224])
+    .toFloat();
     });
+
+    let offset = tf.scalar(127.5);
+
+    tensor = tensor.sub(offset)
+      .div(offset)
+      .expandDims();
 
     let predictions = await model.predict(tensor).data();
 
     let results = Array.from(predictions)
     .map(function (p, i) {
       return {
+        className: d[i],
         probability: p,
-        className: d[i]
       };
     }).sort(function (a, b) {
       return b.probability - a.probability;
