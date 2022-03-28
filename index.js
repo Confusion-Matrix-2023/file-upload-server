@@ -51,7 +51,7 @@ async function generatePredictions(imagePath) {
 
     var tensor = tf.tidy(() => {
       return tf.node.decodeImage(buffer, 3).resizeNearestNeighbor([224, 224])
-    .toFloat();
+        .toFloat();
     });
 
     let offset = tf.scalar(127.5);
@@ -63,21 +63,21 @@ async function generatePredictions(imagePath) {
     let predictions = await model.predict(tensor).data();
 
     let results = Array.from(predictions)
-    .map(function (p, i) {
-      return {
-        className: d[i],
-        probability: p,
-      };
-    }).sort(function (a, b) {
-      return b.probability - a.probability;
-    }).slice(0, 5);
+      .map(function(p, i) {
+        return {
+          className: d[i],
+          probability: p,
+        };
+      }).sort(function(a, b) {
+        return b.probability - a.probability;
+      }).slice(0, 5);
 
     console.log(results);
-    
-  } catch(err) {
+
+  } catch (err) {
     console.log(err);
   }
-  
+
 }
 
 app.get("/", (req, res) => {
