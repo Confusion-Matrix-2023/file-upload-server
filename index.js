@@ -1,11 +1,15 @@
 const cors = require("cors");
 const express = require("express");
 const multer = require("multer");
-
+const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const autofisSchema = new Schema({
+  device_id: {
+    type: String,
+    required: true
+  },
   image_url: {
     type: String,
     required: true,
@@ -33,6 +37,7 @@ const autofisSchema = new Schema({
 });
 
 const ATLAS_URI = 'mongodb+srv://abc:YPcBYwaTd6WH6g1a@cluster0.yqewv.mongodb.net/autofis?retryWrites=true&w=majority';
+const JWT_SECRET = "f00t4f30321@@0439!2#@am"
 
 const Autofis = mongoose.model(
   "autofis",
@@ -69,11 +74,33 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+const authMiddleware = (req, res, next) => {
+  const bearerToken = req.headers["authorization"];
+  if (bearerToken) {
+    const token = bearerToken.split(" ")[1];
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+      if (err) {
+        res.status(401).json({
+          message: "Invalid token"
+        });
+      } else {
+        req.device_id = decoded;
+        next();
+      }
+    });
+  } else {
+    res.status(401).json({
+      message: "No token provided"
+    });
+  }
+}
+
+
 app.get("/", (req, res) => {
   res.json({ "Hello": "World!" });
 });
 
-app.post("/api/upload", upload.single("file"), async (req, response) => {
+app.post("/api/upload", authMiddleware, upload.single("file"), async (req, response) => {
   try {
     console.log(req.file.path);
 
@@ -93,7 +120,8 @@ app.post("/api/upload", upload.single("file"), async (req, response) => {
         longitude: req.body.longitude,
         latitude: req.body.latitude,
         quantity: req.body.quantity,
-        timestamp: req.body.timestamp
+        timestamp: req.body.timestamp,
+        device_id: req.device_id
       })
 
       await fish.save()
@@ -108,10 +136,18 @@ app.post("/api/upload", upload.single("file"), async (req, response) => {
   }
 });
 
-app.get("/api/history", async (req, res) => {
-  const fish = await Autofis.find({})
-
-  return res.status(200).json(fish);
+app.get("/api/history", authMiddleware, async (req, res) => {
+  try {
+    const fishes = await Autofis.find({
+      device_id: req.device_id
+    });
+    res.status(200).json(fishes);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "error!",
+    });
+  }
 })
 
 mongoose
