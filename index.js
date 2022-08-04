@@ -78,17 +78,20 @@ const authMiddleware = (req, res, next) => {
   const bearerToken = req.headers["authorization"];
   if (bearerToken) {
     const token = bearerToken.split(" ")[1];
+    console.log(token)
     jwt.verify(token, JWT_SECRET, (err, decoded) => {
       if (err) {
+        console.log("invalid token")
         res.status(401).json({
           message: "Invalid token"
         });
       } else {
-        req.device_id = decoded;
+        req.device_id = decoded.device_id;
         next();
       }
     });
   } else {
+    console.log("no token")
     res.status(401).json({
       message: "No token provided"
     });
@@ -116,7 +119,7 @@ app.post("/api/upload", authMiddleware, upload.single("file"), async (req, respo
 
       const fish = new Autofis({
         image_url: res.secure_url,
-        name: "",
+        name: "NA",
         longitude: req.body.longitude,
         latitude: req.body.latitude,
         quantity: req.body.quantity,
