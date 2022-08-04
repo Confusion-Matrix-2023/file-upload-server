@@ -41,9 +41,9 @@ const Autofis = mongoose.model(
 
 const cloudinary = require('cloudinary').v2;
 
-cloudinary.config({ 
-  cloud_name: 'autofis', 
-  api_key: '336758519792364', 
+cloudinary.config({
+  cloud_name: 'autofis',
+  api_key: '336758519792364',
   api_secret: 'uuFzlzH2x084BQ2aEAmYEBxbdWc',
   secure: true
 });
@@ -59,10 +59,10 @@ require("dotenv").config();
 const port = process.env.PORT || 5000;
 
 const storage = multer.diskStorage({
-  destination: function(req, file, callback) {
+  destination: function (req, file, callback) {
     callback(null, './uploads');
   },
-  filename: function(req, file, callback) {
+  filename: function (req, file, callback) {
     callback(null, file.originalname);
   }
 });
@@ -78,7 +78,7 @@ app.post("/api/upload", upload.single("file"), async (req, response) => {
     console.log(req.file.path);
 
     cloudinary.uploader.upload(`/home/runner/file-upload-server/${req.file.path}`, async function (err, res) {
-      if(err) {
+      if (err) {
         console.error(err);
         return res.status(400).json({
           message: "Something went wrong!"
@@ -89,7 +89,7 @@ app.post("/api/upload", upload.single("file"), async (req, response) => {
 
       const fish = new Autofis({
         image_url: res.secure_url,
-        name: "fishName",
+        name: "",
         longitude: req.body.longitude,
         latitude: req.body.latitude,
         quantity: req.body.quantity,
