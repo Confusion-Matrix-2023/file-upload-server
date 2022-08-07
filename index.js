@@ -106,7 +106,11 @@ app.get("/", (req, res) => {
 app.post("/api/upload", authMiddleware, upload.single("file"), async (req, response) => {
   try {
     console.log(req.file.path);
-
+    console.log(req.body.longitude);
+    console.log(req.body.latitude);
+    console.log(req.body.quantity);
+    console.log(req.body.timestamp);
+    console.log(req.device_id);
     cloudinary.uploader.upload(`/home/runner/file-upload-server/${req.file.path}`, async function (err, res) {
       if (err) {
         console.error(err);
@@ -143,7 +147,7 @@ app.get("/api/history", authMiddleware, async (req, res) => {
   try {
     const fishes = await Autofis.find({
       device_id: req.device_id
-    });
+    }).sort({timestamp: -1});
     res.status(200).json(fishes);
   } catch (err) {
     console.log(err);
